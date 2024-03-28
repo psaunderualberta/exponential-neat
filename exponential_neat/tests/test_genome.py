@@ -5,7 +5,7 @@ class TestGenome:
     G = Genome(3)
 
     def test_create(self):
-        net = self.G.new_net(random_weights=False)
+        net = self.G.newNet(random_weights=False)
         edges = list(net.edges())
         assert list(net.edges()) == [(0, 3), (1, 3), (2, 3)]
         

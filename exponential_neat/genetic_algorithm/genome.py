@@ -13,7 +13,7 @@ class Genome:
         self.num_features = num_features
         self.global_innovation_number = count(start=num_features)
 
-    def new_net(self, random_weights: bool = True) -> nx.DiGraph:
+    def newNet(self, random_weights: bool = True) -> nx.DiGraph:
         weight_gen = np.random.random if random_weights else lambda : 1
 
         # Create the basic network
@@ -29,7 +29,7 @@ class Genome:
         return deepcopy(self)
 
     @classmethod
-    def new_node(cls, net: nx.DiGraph) -> nx.DiGraph:
+    def newNode(cls, net: nx.DiGraph) -> nx.DiGraph:
         edges = list(net.edges(data=True))
 
         # Get random edge to split
@@ -51,7 +51,7 @@ class Genome:
         return net
 
     @classmethod
-    def new_connection(cls, net: nx.DiGraph) -> nx.DiGraph:
+    def newConnection(cls, net: nx.DiGraph) -> nx.DiGraph:
         nodes = net.nodes()
         edges = net.edges()
 
@@ -89,6 +89,6 @@ class Genome:
 
         
     @classmethod
-    def crossover(cls, first: nx.DiGraph, second: nx.DiGraph):
-        pass
+    def crossover(cls, first: nx.DiGraph, second: nx.DiGraph) -> nx.DiGraph:
+        return first
     
