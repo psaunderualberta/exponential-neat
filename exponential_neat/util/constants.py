@@ -1,3 +1,5 @@
+from util.util import MSE
+
 OUTPUT_NODE_NAME = "output"
 
 # Parameter names
@@ -10,3 +12,7 @@ WEIGHT_MU = "weight-mu"
 WEIGHT_SIGMA = "weight-sigma"
 WEIGHT_MIN = "weight-min"
 WEIGHT_MAX = "weight_max"
+
+FITNESS_FUNCS = {
+    "MSE": MSE,
+}

@@ -1,6 +1,6 @@
 import networkx as nx
 from typing import List
-from exponential_neat.genetic_algorithm.constants import (
+from util.constants import (
     DELTA_T,
     P_CROSSOVER,
     P_NEW_CONNECTION,
@@ -11,16 +11,16 @@ from exponential_neat.genetic_algorithm.constants import (
     WEIGHT_MU,
     WEIGHT_SIGMA,
 )
-from exponential_neat.genetic_algorithm.genome import Genome
+from genetic_algorithm.genome import Genome
 from genetic_algorithm.species import Species
 from util.comparisons import delta
 from util.util import unif
 
 
 class Population:
-    def __init__(self, config: dict = {}):
+    def __init__(self, new_genomes: List[nx.DiGraph] = [], config: dict = {}):
         self.species: List[Species] = []
-        self.new_genomes: List[nx.DiGraph] = []
+        self.new_genomes: List[nx.DiGraph] = new_genomes
         self.config = config
 
     def updateRepresentativeGenomes(self):

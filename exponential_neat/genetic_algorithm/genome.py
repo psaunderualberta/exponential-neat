@@ -1,4 +1,4 @@
-from genetic_algorithm.constants import OUTPUT_NODE_NAME
+from util.constants import OUTPUT_NODE_NAME
 from typing import Tuple, Any, List, Callable
 import pandas as pd
 import networkx as nx
@@ -80,7 +80,6 @@ class Genome:
         ][0]
         input_node_ids = set(range(out_node[0]))
 
-        # Edge case where every connection already exists
         for _ in range(1000):
             n1 = choice(nodes)
             n2 = choice(nodes)
@@ -97,19 +96,20 @@ class Genome:
                 )
                 return nc
 
+        # Edge case where every connection already exists
         raise Exception("Cannot add to net and keep DAG nature")
 
     @classmethod
-    def evaluate(cls, net: nx.DiGraph, dataset: np.array) -> np.array:
+    def predict(cls, net: nx.DiGraph, dataset: np.array) -> np.array:
         print(net.nodes(data=True))
         print(net.edges(data=True))
         out_node = [
             node for node in net.nodes(data=True) if OUTPUT_NODE_NAME in node[1]
         ][0]
-        return cls.__evaluateHelper(net, out_node, dataset)
+        return cls.__predictHelper(net, out_node, dataset)
 
     @classmethod
-    def __evaluateHelper(
+    def __predictHelper(
         cls, net: nx.DiGraph, out_node: Tuple[int, dict], dataset: np.array
     ) -> np.array:
         # If the node is an input, just get the corresponding feature
@@ -127,7 +127,7 @@ class Genome:
             if edge[2].get("disabled", False):
                 continue
 
-            inp = cls.__evaluateHelper(net, (edge[0], net.nodes[edge[0]]), dataset)
+            inp = cls.__predictHelper(net, (edge[0], net.nodes[edge[0]]), dataset)
             weight = edge[2]["weight"]
             if np.prod(result.shape) == 0:
                 result = np.dot(inp, weight)

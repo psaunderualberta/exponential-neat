@@ -1,0 +1,5 @@
+{
+    "population_size": 150,
+    "fitness_func": "MSE",
+    "generations": 100
+}

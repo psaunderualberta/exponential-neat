@@ -91,7 +91,7 @@ class TestGenome:
 
         net = G.newNet(False)
 
-        result = G.evaluate(net, data)
+        result = G.predict(net, data)
         assert np.all(result == np.array([2, 0, 9]))
 
     def test_evaluate_complex(self):
