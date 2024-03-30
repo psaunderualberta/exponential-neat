@@ -6,7 +6,7 @@ from util.constants import OUTPUT_NODE_NAME
 
 class TestUtil:
     def test_get_edge_types(self):
-        """ This example is taken from the NEAT paper by Stanley and Miikkulainen (2002)"""
+        """This example is taken from the NEAT paper by Stanley and Miikkulainen (2002)"""
 
         g1 = nx.DiGraph()
         g1.add_edges_from(
