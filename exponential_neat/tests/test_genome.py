@@ -3,6 +3,7 @@ import numpy as np
 import pytest
 import pandas as pd
 
+
 class TestGenome:
     G = Genome(3)
 
@@ -10,16 +11,16 @@ class TestGenome:
         net = self.G.newNet(random_weights=False)
         edges = list(net.edges())
         assert list(net.edges()) == [(0, 3), (1, 3), (2, 3)]
-        
+
     def test_evaluate(self):
         pass
-    
+
     def test_crossover(self):
         pass
-    
+
     def test_new_node_set_edge(self):
         G = Genome(3)
-       
+
         net = G.newNet()
         assert list(net.edges()) == [(0, 3), (1, 3), (2, 3)]
 
@@ -36,12 +37,11 @@ class TestGenome:
         new_weight_second = newnet.edges[4, 3]["weight"]
 
         assert new_weight_first == 1.0
-        assert new_weight_second == old_weight 
-        
+        assert new_weight_second == old_weight
 
     def test_new_node_random(self):
         G = Genome(3)
-       
+
         net = G.newNet()
         assert list(net.edges()) == [(0, 3), (1, 3), (2, 3)]
 
@@ -60,12 +60,12 @@ class TestGenome:
         new_weight_second = newnet.edges[4, nsnk]["weight"]
 
         assert new_weight_first == 1.0
-        assert new_weight_second == old_weight 
+        assert new_weight_second == old_weight
         assert newnet.edges[nsrc, nsnk].get("disabled", False) == True
-    
+
     def test_new_connection(self):
         G = Genome(3)
-       
+
         net = G.newNet()
         assert list(net.edges()) == [(0, 3), (1, 3), (2, 3)]
 
@@ -74,25 +74,20 @@ class TestGenome:
 
         assert len(list(newnet.nodes())) == len(list(net.nodes()))
         assert len(newnet.edges()) == 1 + len(net.edges())
-        
 
     def test_unable_to_add_connection(self):
         G = Genome(2)
 
         net = G.newNet()
         net.add_edge(0, 1)
-       
+
         with pytest.raises(Exception):
             G.newConnection(net)
-    
-    def test_evaluate_simple(self): 
+
+    def test_evaluate_simple(self):
         G = Genome(3)
 
-        data = np.array([
-            [1, 0, 1],
-            [-1, -1, -1],
-            [5, 3, 1]
-        ])
+        data = np.array([[1, 0, 1], [-1, -1, -1], [5, 3, 1]])
 
         net = G.newNet(False)
 

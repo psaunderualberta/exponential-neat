@@ -1,11 +1,12 @@
 import networkx as nx
 import numpy as np
-from random import choice 
+from random import choice
+
 
 class Species:
     def __init__(self, representative: nx.DiGraph):
-        self.representative_genome = representative 
-        self.genomes = [representative] 
+        self.representative_genome = representative
+        self.genomes = [representative]
         self.stalled_gens = 0
 
     def getRepresentativeGenome(self) -> nx.DiGraph:
@@ -23,7 +24,7 @@ class Species:
 
     def __len__(self) -> int:
         return len(self.genomes)
-    
+
     def isStagnated(self) -> bool:
         return False
 

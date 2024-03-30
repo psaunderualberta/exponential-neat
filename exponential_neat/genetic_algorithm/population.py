@@ -1,10 +1,21 @@
 import networkx as nx
-from typing import List 
-from exponential_neat.genetic_algorithm.constants import DELTA_T, P_CROSSOVER, P_NEW_CONNECTION, P_NEW_NODE, P_WEIGHT, WEIGHT_MAX, WEIGHT_MIN, WEIGHT_MU, WEIGHT_SIGMA
+from typing import List
+from exponential_neat.genetic_algorithm.constants import (
+    DELTA_T,
+    P_CROSSOVER,
+    P_NEW_CONNECTION,
+    P_NEW_NODE,
+    P_WEIGHT,
+    WEIGHT_MAX,
+    WEIGHT_MIN,
+    WEIGHT_MU,
+    WEIGHT_SIGMA,
+)
 from exponential_neat.genetic_algorithm.genome import Genome
 from genetic_algorithm.species import Species
 from util.comparisons import delta
 from util.util import unif
+
 
 class Population:
     def __init__(self, config: dict = {}):
@@ -15,7 +26,7 @@ class Population:
     def updateRepresentativeGenomes(self):
         for species in self.species:
             species.updateRepresentativeGenome()
-    
+
     def removeStagnatedSpecies(self) -> None:
         non_stagnated = []
         for species in self.species:
@@ -42,7 +53,7 @@ class Population:
                 self.species.append(Species(genome))
 
         # Reset the new genomes
-        return self.species 
+        return self.species
 
     def normalizeFitnesses(self) -> List[float]:
         # TODO
@@ -74,11 +85,16 @@ class Population:
                 for edge in edges:
                     if unif() <= self.config[P_WEIGHT]:
                         # Perturb the weight by the specified noise
-                        edge["weight"] += np.random.normal(self.config[WEIGHT_MU], self.config[WEIGHT_SIGMA])
+                        edge["weight"] += np.random.normal(
+                            self.config[WEIGHT_MU], self.config[WEIGHT_SIGMA]
+                        )
 
                         # Clip the weight to ensure its not too big or too small
-                        edge["weight"] = max(min(edge["weight"], self.config[WEIGHT_MAX]), self.config[WEIGHT_MIN])
-                        
+                        edge["weight"] = max(
+                            min(edge["weight"], self.config[WEIGHT_MAX]),
+                            self.config[WEIGHT_MIN],
+                        )
+
                 # Add a new node w/ some probability
                 if unif() <= self.config[P_NEW_NODE]:
                     Genome.newNode(g)
@@ -93,4 +109,4 @@ class Population:
             # Update the representative genomes, as the old may have been removed
             species.updateRepresentativeGenome()
 
-        return self.new_genomes 
+        return self.new_genomes

@@ -10,5 +10,3 @@ WEIGHT_MU = "weight-mu"
 WEIGHT_SIGMA = "weight-sigma"
 WEIGHT_MIN = "weight-min"
 WEIGHT_MAX = "weight_max"
-
-
