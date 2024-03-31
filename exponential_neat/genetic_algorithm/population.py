@@ -91,7 +91,12 @@ class Population:
 
         for species, sa in zip(self.species, spawn_amounts):
             species.pruneWorstGenomes()
-            for _ in range(sa):
+
+            # Copy over champion
+            if sa > 0:
+                self.new_genomes.append(species.getRepresentativeGenome())
+
+            for _ in range(sa - 1):
                 g = species.getRandomGenome()
 
                 # Crossover w/ some probability

@@ -7,9 +7,9 @@
     "C3": 0.4,
     "delta_t": 3,
     "p_crossover": 0.75,
-    "p_new-node": 0.01,
-    "p_new-connection": 0.01,
-    "p_weight": 0.50,
+    "p_new-node": 0.03,
+    "p_new-connection": 0.05,
+    "p_weight": 0.80,
     
     "weight-mu": 0.0,
     "weight-sigma": 1.0,

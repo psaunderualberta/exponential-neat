@@ -70,12 +70,22 @@ def draw_net(problem: str, net: nx.DiGraph, fitness: float):
 
     fig, ax = plt.subplots()
     nx.draw_networkx(net, pos=pos, ax=ax)
+
+    for attr in ["weight", "disabled"]:
+        edge_labels = nx.get_edge_attributes(net, attr)
+
+        if attr == "weight":
+            for label in edge_labels:
+                edge_labels[label] = f"{edge_labels[label]:.2f}"
+
+        nx.draw_networkx_edge_labels(net, pos, edge_labels)
+
     ax.set_title(f"Problem: {problem}, Fitness: {fitness}")
     fig.tight_layout()
     
     # Save file
-    outfile = os.path.join(os.path.dirname(__file__), "output", "xor.dot")
-    nx.drawing.nx_pydot.write_dot(net, outfile)
+    outfile = os.path.join(os.path.dirname(__file__), "out", "xor.pdf")
+    plt.savefig(outfile, bbox_inches='tight')
 
 if __name__ == "__main__":
     main()

@@ -24,19 +24,19 @@ def getDisjointGenes(g1: nx.DiGraph, g2: nx.DiGraph) -> List[Tuple[int, nx.DiGra
     g1edges = g1.edges(data=True)
     g2edges = g2.edges(data=True)
 
-    g1gins = set([e[2]["gin"] for e in g1edges])
-    g2gins = set([e[2]["gin"] for e in g2edges])
     g1max = max([e[2]["gin"] for e in g1edges])
     g2max = max([e[2]["gin"] for e in g2edges])
+    g1gins = set([e[2]["gin"] for e in g1edges if e[2]["gin"] < g2max])
+    g2gins = set([e[2]["gin"] for e in g2edges if e[2]["gin"] < g1max])
 
     disjoint = []
 
     for edge in g1edges:
-        if edge[2]["gin"] not in g2gins and edge[2]["gin"] < g2max:
+        if edge[2]["gin"] not in g2gins:
             disjoint.append((1, edge))
 
     for edge in g2edges:
-        if edge[2]["gin"] not in g1gins and edge[2]["gin"] < g1max:
+        if edge[2]["gin"] not in g1gins:
             disjoint.append((2, edge))
 
     return disjoint
