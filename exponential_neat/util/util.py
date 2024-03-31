@@ -1,25 +1,26 @@
 import numpy as np
 import networkx as nx
 import numpy as np
-from typing import Tuple
+from typing import Tuple, List
 
 
-def getMatchingGenes(g1: nx.DiGraph, g2: nx.DiGraph) -> tuple:
+def getMatchingGenes(
+    g1: nx.DiGraph, g2: nx.DiGraph
+) -> List[Tuple[nx.DiGraph, nx.DiGraph]]:
     g1edges = g1.edges(data=True)
     g2edges = g2.edges(data=True)
 
-    print(g2edges)
-    g2gins = set([e[2]["gin"] for e in g2edges])
+    g2gins = {e[2]["gin"]: e for e in g2edges}
 
     matching = []
     for edge in g1edges:
         if edge[2]["gin"] in g2gins:
-            matching.append(edge)
+            matching.append((edge, g2gins[edge[2]["gin"]]))
 
     return matching
 
 
-def getDisjointGenes(g1: nx.DiGraph, g2: nx.DiGraph) -> tuple:
+def getDisjointGenes(g1: nx.DiGraph, g2: nx.DiGraph) -> List[Tuple[int, nx.DiGraph]]:
     g1edges = g1.edges(data=True)
     g2edges = g2.edges(data=True)
 
@@ -32,16 +33,16 @@ def getDisjointGenes(g1: nx.DiGraph, g2: nx.DiGraph) -> tuple:
 
     for edge in g1edges:
         if edge[2]["gin"] not in g2gins and edge[2]["gin"] < g2max:
-            disjoint.append(edge)
+            disjoint.append((1, edge))
 
     for edge in g2edges:
         if edge[2]["gin"] not in g1gins and edge[2]["gin"] < g1max:
-            disjoint.append(edge)
+            disjoint.append((2, edge))
 
     return disjoint
 
 
-def getExcessGenes(g1: nx.DiGraph, g2: nx.DiGraph) -> tuple:
+def getExcessGenes(g1: nx.DiGraph, g2: nx.DiGraph) -> List[Tuple[int, nx.DiGraph]]:
     g1edges = g1.edges(data=True)
     g2edges = g2.edges(data=True)
 
@@ -54,11 +55,11 @@ def getExcessGenes(g1: nx.DiGraph, g2: nx.DiGraph) -> tuple:
 
     for edge in g1edges:
         if edge[2]["gin"] not in g2gins and edge[2]["gin"] > g2max:
-            excess.append(edge)
+            excess.append((1, edge))
 
     for edge in g2edges:
         if edge[2]["gin"] not in g1gins and edge[2]["gin"] > g1max:
-            excess.append(edge)
+            excess.append((2, edge))
 
     return excess
 
@@ -67,24 +68,22 @@ def getEdgeTypes(g1: nx.DiGraph, g2: nx.DiGraph) -> Tuple[list, list, list]:
     return (getMatchingGenes(g1, g2), getDisjointGenes(g1, g2), getExcessGenes(g1, g2))
 
 
-def delta(g1: nx.DiGraph, g2: nx.DiGraph) -> float:
+def delta(g1: nx.DiGraph, g2: nx.DiGraph, config: dict) -> float:
     matching, disjoint, excess = getEdgeTypes(g1, g2)
 
-    # TODO: Set this as a parameter
-    w = 0.5
     N = max(len(g1.edges()), len(g2.edges()))
 
-    return (
-        w * len(disjoint) / N
-        + w * len(excess) / N
-        + (1 - w)
-        * sum([np.abs(e1[2]["weight"] - e2[2]["weight"]) for e1, e2 in matching])
-        / len(matching)
-    )
+    E = len(excess)
+    D = len(disjoint)
+    W_bar = sum(
+        [np.abs(e1[2]["weight"] - e2[2]["weight"]) for e1, e2 in matching]
+    ) / len(matching)
+
+    return config["C1"] * D / N + config["C2"] * E / N + config["C3"] * W_bar
 
 
 def MSE(y_true: np.array, y_pred: np.array) -> float:
-    return np.power(y_true - y_pred, 2).mean()
+    return (4 - np.sum(y_true - y_pred)) ** 2
 
 
 def unif(start=0, end=1):

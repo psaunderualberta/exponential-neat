@@ -6,6 +6,7 @@ from copy import deepcopy
 from itertools import count
 import numpy as np
 from random import choice
+from util.util import getEdgeTypes
 
 
 class Genome:
@@ -14,24 +15,29 @@ class Genome:
 
     def __init__(self, num_features: int):
         self.num_features = num_features
-        self.global_innovation_number = count(start=num_features)
+        self.global_innovation_number = count(start=num_features + 1)
 
     def newNet(self, random_weights: bool = True) -> nx.DiGraph:
         weight_gen = np.random.random if random_weights else lambda: 1
 
         # Create the basic network
         net = nx.DiGraph()
-        out_node_id = self.num_features
+        out_node_id = self.num_features + 1
         w_edges = [
             (i, out_node_id, {"weight": weight_gen(), "gin": i})
             for i in range(self.num_features)
-        ]
+        ] + [(self.num_features, out_node_id, {"weight": weight_gen(), "gin": self.num_features})]
         net.add_edges_from(w_edges)
         nx.set_node_attributes(net, {out_node_id: True}, name=OUTPUT_NODE_NAME)
-        for i in range(self.num_features):
-            nx.set_node_attributes(
-                net, {i: i for i in range(self.num_features)}, name="feature"
-            )
+        nx.set_node_attributes(
+            net, {i: i for i in range(self.num_features)}, name="feature"
+        )
+        nx.set_node_attributes(
+            net, {self.num_features: True}, name="bias"
+        )
+
+
+
         return net
 
     @classmethod
@@ -97,12 +103,10 @@ class Genome:
                 return nc
 
         # Edge case where every connection already exists
-        raise Exception("Cannot add to net and keep DAG nature")
+        return net
 
     @classmethod
     def predict(cls, net: nx.DiGraph, dataset: np.array) -> np.array:
-        print(net.nodes(data=True))
-        print(net.edges(data=True))
         out_node = [
             node for node in net.nodes(data=True) if OUTPUT_NODE_NAME in node[1]
         ][0]
@@ -115,7 +119,9 @@ class Genome:
         # If the node is an input, just get the corresponding feature
         node_id, data_dict = out_node
         if "feature" in data_dict:
-            return dataset[:, data_dict["feature"]]
+            return dataset[:, data_dict["feature"]].reshape(-1, 1)
+        elif "bias" in data_dict:
+            return np.ones((dataset.shape[0], 1))
 
         # else, compute all input nodes
         incoming_edges = net.in_edges(node_id, data=True)
@@ -134,8 +140,7 @@ class Genome:
             else:
                 result += np.dot(inp, weight)
 
-        print(result)
-        return cls.activ(result)
+        return 1 / (1 + np.exp(-result))
 
     @classmethod
     def crossover(cls, first: nx.DiGraph, second: nx.DiGraph) -> nx.DiGraph:

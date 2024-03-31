@@ -1,5 +1,22 @@
 {
-    "population_size": 150,
+    "population-size": 150,
     "fitness_func": "MSE",
-    "generations": 100
+    "generations": 100,
+    "C1": 1.0,
+    "C2": 1.0,
+    "C3": 0.4,
+    "delta_t": 3,
+    "p_crossover": 0.75,
+    "p_new-node": 0.01,
+    "p_new-connection": 0.01,
+    "p_weight": 0.50,
+    
+    "weight-mu": 0.0,
+    "weight-sigma": 1.0,
+    "weight-min": -10,
+    "weight-max": 10,
+
+    "min-species-size": 5,
+    "max-stagnation": 15,
+    "survival-threshold": 0.2
 }

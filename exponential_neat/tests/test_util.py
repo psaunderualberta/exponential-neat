@@ -59,10 +59,14 @@ class TestUtil:
         )
 
         matching, disjoint, excess = getEdgeTypes(g1, g2)
-        matching_gins = set([e[2]["gin"] for e in matching])
-        disjoint_gins = set([e[2]["gin"] for e in disjoint])
-        excess_gins = set([e[2]["gin"] for e in excess])
+
+        # Ensure that the matching genes are the same in both directions
+        assert [e[2]["gin"] for _, e in matching] == [e[2]["gin"] for e, _ in matching]
+
+        matching_gins = set([e[2]["gin"] for e, _ in matching])
+        disjoint_gins = set([(i, e[2]["gin"]) for i, e in disjoint])
+        excess_gins = set([(i, e[2]["gin"]) for i, e in excess])
 
         assert matching_gins == {1, 2, 3, 4, 5}
-        assert disjoint_gins == {6, 7, 8}
-        assert excess_gins == {9, 10}
+        assert disjoint_gins == {(2, 6), (2, 7), (1, 8)}
+        assert excess_gins == {(2, 9), (2, 10)}
