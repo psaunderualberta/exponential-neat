@@ -9,6 +9,7 @@ from util.constants import FITNESS_FUNCS
 import cProfile
 from pstats import SortKey
 from tqdm import tqdm
+import matplotlib.pyplot as plt
 
 def main():
     # Read in config
@@ -44,9 +45,7 @@ def main():
             if abs(fitnesses[-1]) <= 1e-5:
                 print("Solution found")
                 print(f"Gen: {i}, Fitness: {fitnesses[-1]}")
-                print(net)
-                print(net.nodes(data=True))
-                print(net.edges(data=True))
+                draw_net("xor", net, fitnesses[-1])
                 return
 
         # Update the species
@@ -58,6 +57,25 @@ def main():
     print("No solution found")
         # pr.print_stats(SortKey.CUMULATIVE)
 
+# From https://networkx.org/documentation/stable/auto_examples/graph/plot_dag_layout.html
+def draw_net(problem: str, net: nx.DiGraph, fitness: float):
+    for layer, nodes in enumerate(nx.topological_generations(net)):
+        # `multipartite_layout` expects the layer as a node attribute, so add the
+        # numeric layer value as a node attribute
+        for node in nodes:
+            net.nodes[node]["layer"] = layer
+
+    # Compute the multipartite_layout using the "layer" node attribute
+    pos = nx.multipartite_layout(net, subset_key="layer")
+
+    fig, ax = plt.subplots()
+    nx.draw_networkx(net, pos=pos, ax=ax)
+    ax.set_title(f"Problem: {problem}, Fitness: {fitness}")
+    fig.tight_layout()
+    
+    # Save file
+    outfile = os.path.join(os.path.dirname(__file__), "output", "xor.dot")
+    nx.drawing.nx_pydot.write_dot(net, outfile)
 
 if __name__ == "__main__":
     main()
