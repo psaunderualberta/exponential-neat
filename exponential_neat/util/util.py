@@ -14,7 +14,10 @@ def getMatchingGenes(
     g1gins = {e[2]["gin"]: e for e in g1edges}
 
     matching_gins = set(g1gins.keys()).intersection(set(g2gins.keys()))
-    return [(g1gins[gin], g2gins[gin]) for gin in matching_gins]
+    matching = [(g1gins[gin], g2gins[gin]) for gin in matching_gins]
+
+    assert [(u, v) for (u, v, _), _ in matching] == [(u, v) for _, (u, v, _) in matching]
+    return matching
 
 def getDisjointGenes(g1: nx.DiGraph, g2: nx.DiGraph) -> List[Tuple[int, nx.DiGraph]]:
     g1edges = g1.edges(data=True)

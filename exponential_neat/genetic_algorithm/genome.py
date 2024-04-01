@@ -70,7 +70,7 @@ class Genome:
                     new_node,
                     {"weight": 1, "gin": next(self.global_innovation_number)},
                 ),
-                (new_node, snk_node, data),
+                (new_node, snk_node, {"weight": data["weight"], "gin": next(self.global_innovation_number)}),
             ]
         )
 
@@ -88,12 +88,13 @@ class Genome:
             node for node in net.nodes(data=True) if OUTPUT_NODE_NAME in node[1]
         ][0]
         input_node_ids = set(range(out_node[0]))
+        output_node_id = out_node[0]
 
         for _ in range(1000):
             n1 = choice(nodes)
             n2 = choice(nodes)
 
-            if n1 == n2 or (n1, n2) in edges or n2 in input_node_ids:
+            if n1 == n2 or (n1, n2) in edges or n2 in input_node_ids or n1 == output_node_id:
                 continue
 
             nc = deepcopy(net)
@@ -142,34 +143,34 @@ class Genome:
 
     def crossover(self, fitter: nx.DiGraph, weaker: nx.DiGraph) -> nx.DiGraph:
         # Create a new network with the same nodes as the first parent
-        return deepcopy(fitter)
+        # return deepcopy(fitter)
 
         # TODO: Fix
-        # if fitter.graph["fitness"] < weaker.graph["fitness"]:
-        #     fitter, weaker = weaker, fitter
+        if fitter.graph["fitness"] < weaker.graph["fitness"]:
+            fitter, weaker = weaker, fitter
 
-        # child = self.annotateNodes(nx.DiGraph())
+        child = self.annotateNodes(nx.DiGraph())
 
-        # # Get the edge types
-        # matching, disjoint, excess = getEdgeTypes(fitter, weaker)
+        # Get the edge types
+        matching, disjoint, excess = getEdgeTypes(fitter, weaker)
 
-        # # Randomly select edges to inherit
-        # for fitter_edge, weaker_edge in matching:
-        #     if np.random.random() < 0.5:
-        #         child.add_edge(*fitter_edge[:2], **fitter_edge[2])
-        #     else:
-        #         child.add_edge(*weaker_edge[:2], **weaker_edge[2])
+        # Randomly select edges to inherit
+        for fitter_edge, weaker_edge in matching:
+            if np.random.random() < 0.5:
+                child.add_edge(*fitter_edge[:2], **fitter_edge[2])
+            else:
+                child.add_edge(*weaker_edge[:2], **weaker_edge[2])
 
-        # # Inherit disjoint and excess genes
-        # for edge in filter(lambda e: e[0] == 1, disjoint + excess):
-        #     child.add_edge(*edge[1][:2], **edge[1][2])
+        # Inherit disjoint and excess genes from fitter parent
+        for edge in filter(lambda e: e[0] == 1, disjoint + excess):
+            child.add_edge(*edge[1][:2], **edge[1][2])
 
-        # if not nx.is_directed_acyclic_graph(child):
-        #     print("Cycle detected")
-        #     print(fitter.edges(data=True))
-        #     print(weaker.edges(data=True))
-        # assert nx.is_directed_acyclic_graph(child)
+        if not nx.is_directed_acyclic_graph(child):
+            print("Cycle detected")
+            print(fitter.edges(data=True))
+            print(weaker.edges(data=True))
+        assert nx.is_directed_acyclic_graph(child)
     
         # Each disabled edge has a 75% chance of being enabled if either parent has it disabled
 
-        # return child
+        return child
