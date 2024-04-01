@@ -102,8 +102,6 @@ class Population:
         spawn_amounts = self.computeSpawnAmounts(norms)
         assert len(spawn_amounts) == len(self.species)
 
-        # Update the representative genomes
-
         for species, sa in zip(self.species, spawn_amounts):
             species.updateRepresentativeGenome()
             species.pruneWorstGenomes()

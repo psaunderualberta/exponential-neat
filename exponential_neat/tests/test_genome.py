@@ -118,3 +118,4 @@ class TestGenome:
         print(result)
         print(y)
         assert np.all(result == y)
+

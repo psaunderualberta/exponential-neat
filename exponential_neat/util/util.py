@@ -85,6 +85,8 @@ def delta(g1: nx.DiGraph, g2: nx.DiGraph, config: dict) -> float:
 
 
 def MSE(y_true: np.array, y_pred: np.array) -> float:
+    y_true = y_true.flatten()
+    y_pred = y_pred.flatten()
     return np.sum((y_true - y_pred) ** 2)
 
 

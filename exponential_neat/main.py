@@ -44,7 +44,7 @@ def main():
             nets.append(net)
             net.graph["fitness"] = fitnesses[-1]
 
-            if abs(fitnesses[-1]) < 1e-5:
+            if abs(fitnesses[-1]) < 0.1:
                 print("Solution found")
                 print(preds)
                 print(y)
@@ -64,6 +64,7 @@ def main():
     best_fitness = np.min(fitnesses)
     best_net = nets[np.argmin(fitnesses)]
     print(f"Best Fitness: {best_fitness}")
+    print(population.genome.predict(best_net, X))
     draw_net("xor", best_net, best_fitness)
 
         # pr.print_stats(SortKey.CUMULATIVE)

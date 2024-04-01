@@ -15,7 +15,7 @@ class Genome:
     def __init__(self, num_features: int):
         self.num_features = num_features
         self.global_innovation_number = count(start=num_features + 1)
-        self.activ = lambda x: 1 / (1 + np.exp(-4.9 * x))
+        self.activ = lambda x: 1 / (1 + np.exp(-5 * x))
 
     def newNet(self, random_weights: bool = True) -> nx.DiGraph:
         weight_gen = np.random.normal if random_weights else lambda: 1
@@ -95,7 +95,7 @@ class Genome:
 
     def newConnection(self, net: nx.DiGraph) -> nx.DiGraph:
         nodes = list(net.nodes())
-        edges = list(net.edges())
+        edges = set(net.edges())
         out_node = [
             node for node in net.nodes(data=True) if OUTPUT_NODE_NAME in node[1]
         ][0]
@@ -108,9 +108,9 @@ class Genome:
 
             if (
                 n1 == n2
-                or (n1, n2) in edges
                 or n2 in input_node_ids
                 or n1 == output_node_id
+                or (n1, n2) in edges
             ):
                 continue
 
