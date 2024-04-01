@@ -101,7 +101,7 @@ class Population:
 
                 # Crossover w/ some probability
                 if unif() <= self.config[P_CROSSOVER]:
-                    g = Genome.crossover(g, species.getRandomGenome())
+                    g = self.genome.crossover(g, species.getRandomGenome())
 
                 edges = list(g.edges(data=True))
 
@@ -118,15 +118,14 @@ class Population:
                             min(edge[2]["weight"], self.config[WEIGHT_MAX]),
                             self.config[WEIGHT_MIN],
                         )
-                    
 
                 # Add a new node w/ some probability
                 if unif() <= self.config[P_NEW_NODE]:
-                    g = Genome.newNode(g)
+                    g = self.genome.newNode(g)
 
                 # Add a new connection w/ some probability
                 if unif() <= self.config[P_NEW_CONNECTION]:
-                    g = Genome.newConnection(g)
+                    g = self.genome.newConnection(g)
 
                 # Append the genome to the list of new genomes
                 self.new_genomes.append(g)

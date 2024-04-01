@@ -28,25 +28,29 @@ class Genome:
             for i in range(self.num_features)
         ] + [(self.num_features, out_node_id, {"weight": weight_gen(), "gin": self.num_features})]
         net.add_edges_from(w_edges)
-        nx.set_node_attributes(net, {out_node_id: True}, name=OUTPUT_NODE_NAME)
+
+        return self.annotateNodes(net)
+    
+    def annotateNodes(self, net: nx.DiGraph) -> nx.DiGraph:
+        # Add the nodes if they are not already present
+        for i in range(self.num_features + 2):
+            net.add_node(i)
+
+        nx.set_node_attributes(net, {self.num_features + 1: True}, name=OUTPUT_NODE_NAME)
         nx.set_node_attributes(
             net, {i: i for i in range(self.num_features)}, name="feature"
         )
         nx.set_node_attributes(
             net, {self.num_features: True}, name="bias"
         )
-
-
-
         return net
 
-    @classmethod
-    def clone(cls, net: nx.DiGraph) -> nx.DiGraph:
+
+    def clone(self, net: nx.DiGraph) -> nx.DiGraph:
         return deepcopy(net)
 
-    @classmethod
     def newNode(
-        cls, net: nx.DiGraph, edge2split: Tuple[int, int] | None = None
+        self, net: nx.DiGraph, edge2split: Tuple[int, int] | None = None
     ) -> nx.DiGraph:
         net = deepcopy(net)
         edges: List[Tuple[int, int, dict[str, Any]]] = list(net.edges(data=True))
@@ -64,7 +68,7 @@ class Genome:
                 (
                     src_node,
                     new_node,
-                    {"weight": 1, "gin": next(cls.global_innovation_number)},
+                    {"weight": 1, "gin": next(self.global_innovation_number)},
                 ),
                 (new_node, snk_node, data),
             ]
@@ -77,8 +81,7 @@ class Genome:
         assert nx.is_directed_acyclic_graph(net)
         return net
 
-    @classmethod
-    def newConnection(cls, net: nx.DiGraph) -> nx.DiGraph:
+    def newConnection(self, net: nx.DiGraph) -> nx.DiGraph:
         nodes = list(net.nodes())
         edges = list(net.edges())
         out_node = [
@@ -98,23 +101,21 @@ class Genome:
 
             if nx.is_directed_acyclic_graph(nc):
                 nx.set_edge_attributes(
-                    nc, {(n1, n2): {"gin": next(cls.global_innovation_number)}}
+                    nc, {(n1, n2): {"gin": next(self.global_innovation_number)}}
                 )
                 return nc
 
-        # Edge case where every connection already exists
+        # Edge case where every connection (probably) already exists
         return net
 
-    @classmethod
-    def predict(cls, net: nx.DiGraph, dataset: np.array) -> np.array:
+    def predict(self, net: nx.DiGraph, dataset: np.array) -> np.array:
         out_node = [
             node for node in net.nodes(data=True) if OUTPUT_NODE_NAME in node[1]
         ][0]
-        return cls.__predictHelper(net, out_node, dataset)
+        return self.__predictHelper(net, out_node, dataset)
 
-    @classmethod
     def __predictHelper(
-        cls, net: nx.DiGraph, out_node: Tuple[int, dict], dataset: np.array
+        self, net: nx.DiGraph, out_node: Tuple[int, dict], dataset: np.array
     ) -> np.array:
         # If the node is an input, just get the corresponding feature
         node_id, data_dict = out_node
@@ -125,7 +126,7 @@ class Genome:
 
         # else, compute all input nodes
         incoming_edges = net.in_edges(node_id, data=True)
-        result = np.array([])
+        result = np.zeros((dataset.shape[0], 1))
         for edge in incoming_edges:
             assert edge[1] == node_id
 
@@ -133,15 +134,42 @@ class Genome:
             if edge[2].get("disabled", False):
                 continue
 
-            inp = cls.__predictHelper(net, (edge[0], net.nodes[edge[0]]), dataset)
+            inp = self.__predictHelper(net, (edge[0], net.nodes[edge[0]]), dataset)
             weight = edge[2]["weight"]
-            if np.prod(result.shape) == 0:
-                result = np.dot(inp, weight)
-            else:
-                result += np.dot(inp, weight)
+            result += np.dot(inp, weight)
 
         return 1 / (1 + np.exp(-result))
 
-    @classmethod
-    def crossover(cls, first: nx.DiGraph, second: nx.DiGraph) -> nx.DiGraph:
-        return first
+    def crossover(self, fitter: nx.DiGraph, weaker: nx.DiGraph) -> nx.DiGraph:
+        # Create a new network with the same nodes as the first parent
+        return deepcopy(fitter)
+
+        # TODO: Fix
+        # if fitter.graph["fitness"] < weaker.graph["fitness"]:
+        #     fitter, weaker = weaker, fitter
+
+        # child = self.annotateNodes(nx.DiGraph())
+
+        # # Get the edge types
+        # matching, disjoint, excess = getEdgeTypes(fitter, weaker)
+
+        # # Randomly select edges to inherit
+        # for fitter_edge, weaker_edge in matching:
+        #     if np.random.random() < 0.5:
+        #         child.add_edge(*fitter_edge[:2], **fitter_edge[2])
+        #     else:
+        #         child.add_edge(*weaker_edge[:2], **weaker_edge[2])
+
+        # # Inherit disjoint and excess genes
+        # for edge in filter(lambda e: e[0] == 1, disjoint + excess):
+        #     child.add_edge(*edge[1][:2], **edge[1][2])
+
+        # if not nx.is_directed_acyclic_graph(child):
+        #     print("Cycle detected")
+        #     print(fitter.edges(data=True))
+        #     print(weaker.edges(data=True))
+        # assert nx.is_directed_acyclic_graph(child)
+    
+        # Each disabled edge has a 75% chance of being enabled if either parent has it disabled
+
+        # return child

@@ -11,14 +11,10 @@ def getMatchingGenes(
     g2edges = g2.edges(data=True)
 
     g2gins = {e[2]["gin"]: e for e in g2edges}
+    g1gins = {e[2]["gin"]: e for e in g1edges}
 
-    matching = []
-    for edge in g1edges:
-        if edge[2]["gin"] in g2gins:
-            matching.append((edge, g2gins[edge[2]["gin"]]))
-
-    return matching
-
+    matching_gins = set(g1gins.keys()).intersection(set(g2gins.keys()))
+    return [(g1gins[gin], g2gins[gin]) for gin in matching_gins]
 
 def getDisjointGenes(g1: nx.DiGraph, g2: nx.DiGraph) -> List[Tuple[int, nx.DiGraph]]:
     g1edges = g1.edges(data=True)
@@ -26,17 +22,17 @@ def getDisjointGenes(g1: nx.DiGraph, g2: nx.DiGraph) -> List[Tuple[int, nx.DiGra
 
     g1max = max([e[2]["gin"] for e in g1edges])
     g2max = max([e[2]["gin"] for e in g2edges])
-    g1gins = set([e[2]["gin"] for e in g1edges if e[2]["gin"] < g2max])
-    g2gins = set([e[2]["gin"] for e in g2edges if e[2]["gin"] < g1max])
+    g1gins = set([e[2]["gin"] for e in g1edges])
+    g2gins = set([e[2]["gin"] for e in g2edges])
 
     disjoint = []
 
     for edge in g1edges:
-        if edge[2]["gin"] not in g2gins:
+        if edge[2]["gin"] not in g2gins and edge[2]["gin"] < g2max:
             disjoint.append((1, edge))
 
     for edge in g2edges:
-        if edge[2]["gin"] not in g1gins:
+        if edge[2]["gin"] not in g1gins and edge[2]["gin"] < g1max:
             disjoint.append((2, edge))
 
     return disjoint
@@ -83,7 +79,7 @@ def delta(g1: nx.DiGraph, g2: nx.DiGraph, config: dict) -> float:
 
 
 def MSE(y_true: np.array, y_pred: np.array) -> float:
-    return (4 - np.sum(y_true - y_pred)) ** 2
+    return -np.sum(y_true - y_pred) ** 2
 
 
 def unif(start=0, end=1):

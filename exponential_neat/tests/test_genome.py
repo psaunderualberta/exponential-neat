@@ -2,7 +2,8 @@ from genetic_algorithm.genome import Genome
 import numpy as np
 import pytest
 import pandas as pd
-
+import networkx as nx
+from util.constants import OUTPUT_NODE_NAME
 
 class TestGenome:
     G = Genome(3)
@@ -93,5 +94,35 @@ class TestGenome:
     #     assert np.all(result == np.array([2, 0, 9]))
 
     def test_evaluate_complex(self):
-        # TODO
-        pass
+        num_features = 2
+        G = Genome(num_features)
+        X = np.array([
+            [1, 0],
+            [0, 1],
+            [1, 1],
+            [0, 0]
+        ]).astype(np.float32)
+        y = np.array([1, 1, 0, 0]).astype(np.float32)
+
+        net = nx.DiGraph()
+        net.add_edges_from([
+            (0, 4, {"weight": -1.62}),
+            (4, 3, {"weight": -4.40}),
+            (1, 3, {"weight": -7.22}),
+            (2, 3, {"weight": -5.08}),
+        ])
+
+        nx.set_node_attributes(net, {num_features + 1: True}, name=OUTPUT_NODE_NAME)
+        nx.set_node_attributes(
+            net, {i: i for i in range(num_features)}, name="feature"
+        )
+        nx.set_node_attributes(
+            net, {num_features: True}, name="bias"
+        )
+
+        result = G.predict(net, X)
+        print(result)
+        print(y)
+        assert np.all(result == y)
+
+

@@ -42,8 +42,10 @@ def main():
             fitnesses.append(evaluator(y, preds))
             net.graph["fitness"] = fitnesses[-1]
 
-            if abs(fitnesses[-1]) <= 1e-5:
+            if abs(fitnesses[-1]) < 1e-6:
                 print("Solution found")
+                print(preds)
+                print(net.edges(data=True))
                 print(f"Gen: {i}, Fitness: {fitnesses[-1]}")
                 draw_net("xor", net, fitnesses[-1])
                 return
