@@ -46,10 +46,6 @@ def main():
 
             if abs(fitnesses[-1]) < 0.1:
                 print("Solution found")
-                print(preds)
-                print(y)
-                print(preds - y)
-                print(net.edges(data=True))
                 print(f"Gen: {i}, Fitness: {fitnesses[-1]}")
                 draw_net("xor", net, fitnesses[-1])
                 return
@@ -67,7 +63,6 @@ def main():
     print(population.genome.predict(best_net, X))
     draw_net("xor", best_net, best_fitness)
 
-        # pr.print_stats(SortKey.CUMULATIVE)
 
 # From https://networkx.org/documentation/stable/auto_examples/graph/plot_dag_layout.html
 def draw_net(problem: str, net: nx.DiGraph, fitness: float):
@@ -78,7 +73,7 @@ def draw_net(problem: str, net: nx.DiGraph, fitness: float):
             net.nodes[node]["layer"] = layer
 
     # Compute the multipartite_layout using the "layer" node attribute
-    pos = nx.multipartite_layout(net, subset_key="layer")
+    pos = nx.multipartite_layout(net, subset_key="layer", align="horizontal")
 
     fig, ax = plt.subplots()
     nx.draw_networkx(net, pos=pos, ax=ax)

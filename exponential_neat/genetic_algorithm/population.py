@@ -8,8 +8,8 @@ from util.constants import (
     P_WEIGHT,
     WEIGHT_MAX,
     WEIGHT_MIN,
-    WEIGHT_LOWER,
-    WEIGHT_UPPER,
+    WEIGHT_MU,
+    WEIGHT_SIGMA,
     POPULATION_SIZE,
 )
 from genetic_algorithm.genome import Genome
@@ -48,6 +48,11 @@ class Population:
 
             for species in self.species:
                 rep = species.getRepresentativeGenome()
+                if len(rep.edges()) != len(genome.edges()):
+                    print(rep.edges())
+                    print(genome.edges())
+                    assert len(rep.edges()) == len(genome.edges())
+                assert len(rep.nodes()) == len(genome.nodes())
                 if delta(rep, genome, self.config) <= self.config[DELTA_T]:
                     species.addGenome(genome)
                     inserted = True
@@ -124,8 +129,8 @@ class Population:
                 for edge in edges:
                     if unif() <= self.config[P_WEIGHT]:
                         # Perturb the weight by the specified noise
-                        edge[2]["weight"] += unif(
-                            self.config[WEIGHT_LOWER], self.config[WEIGHT_UPPER]
+                        edge[2]["weight"] += np.random.normal(
+                            self.config[WEIGHT_MU], self.config[WEIGHT_SIGMA]
                         )
 
                         # Clip the weight to ensure its not too big or too small
@@ -134,13 +139,13 @@ class Population:
                             self.config[WEIGHT_MIN],
                         )
 
-                # Add a new node w/ some probability
-                if unif() <= self.config[P_NEW_NODE]:
-                    g = self.genome.newNode(g)
+                # # Add a new node w/ some probability
+                # if unif() <= self.config[P_NEW_NODE]:
+                #     g = self.genome.newNode(g)
 
-                # Add a new connection w/ some probability
-                if unif() <= self.config[P_NEW_CONNECTION]:
-                    g = self.genome.newConnection(g)
+                # # Add a new connection w/ some probability
+                # if unif() <= self.config[P_NEW_CONNECTION]:
+                #     g = self.genome.newConnection(g)
 
                 # Append the genome to the list of new genomes
                 self.new_genomes.append(g)

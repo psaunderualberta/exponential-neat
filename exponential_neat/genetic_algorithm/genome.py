@@ -35,6 +35,15 @@ class Genome:
         ]
         net.add_edges_from(w_edges)
 
+        # Add a single hidden node
+        hidden_node_id = self.num_features + 2
+        net.add_edges_from(
+            [
+                (i, hidden_node_id, {"weight": weight_gen(), "gin": self.num_features + i + 1})
+                for i in range(self.num_features + 1)
+            ] + [(hidden_node_id, out_node_id, {"weight": weight_gen(), "gin": 100})]
+        )
+
         return self.annotateNodes(net)
 
     def annotateNodes(self, net: nx.DiGraph) -> nx.DiGraph:
@@ -180,6 +189,7 @@ class Genome:
                 child.edges[fitter_edge[:2]]["disabled"] = np.random.random() < 0.75
 
         # Inherit disjoint and excess genes from fitter parent
+        assert len(disjoint) + len(excess) == 0
         for edge in filter(lambda e: e[0] == 1, disjoint + excess):
             child.add_edge(*edge[1][:2], **edge[1][2])
 
