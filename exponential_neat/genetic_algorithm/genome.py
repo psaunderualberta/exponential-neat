@@ -11,14 +11,14 @@ from util.util import getEdgeTypes
 
 class Genome:
     global_innovation_number = count()
-    activ = lambda x: np.maximum(0, x)
 
     def __init__(self, num_features: int):
         self.num_features = num_features
         self.global_innovation_number = count(start=num_features + 1)
+        self.activ = lambda x: 1 / (1 + np.exp(-4.9 * x))
 
     def newNet(self, random_weights: bool = True) -> nx.DiGraph:
-        weight_gen = np.random.random if random_weights else lambda: 1
+        weight_gen = np.random.normal if random_weights else lambda: 1
 
         # Create the basic network
         net = nx.DiGraph()
@@ -156,13 +156,10 @@ class Genome:
             weight = edge[2]["weight"]
             result += np.dot(inp, weight)
 
-        return 1 / (1 + np.exp(-result))
+        return self.activ(result)
 
     def crossover(self, fitter: nx.DiGraph, weaker: nx.DiGraph) -> nx.DiGraph:
         # Create a new network with the same nodes as the first parent
-        # return deepcopy(fitter)
-
-        # TODO: Fix
         if fitter.graph["fitness"] < weaker.graph["fitness"]:
             fitter, weaker = weaker, fitter
 
@@ -177,17 +174,14 @@ class Genome:
                 child.add_edge(*fitter_edge[:2], **fitter_edge[2])
             else:
                 child.add_edge(*weaker_edge[:2], **weaker_edge[2])
+            
+            # Each disabled edge has a 75% chance of being disabled if either parent has it disabled
+            if fitter_edge[2].get("disabled", False) or weaker_edge[2].get("disabled", False):
+                child.edges[fitter_edge[:2]]["disabled"] = np.random.random() < 0.75
 
         # Inherit disjoint and excess genes from fitter parent
         for edge in filter(lambda e: e[0] == 1, disjoint + excess):
             child.add_edge(*edge[1][:2], **edge[1][2])
 
-        if not nx.is_directed_acyclic_graph(child):
-            print("Cycle detected")
-            print(fitter.edges(data=True))
-            print(weaker.edges(data=True))
         assert nx.is_directed_acyclic_graph(child)
-
-        # Each disabled edge has a 75% chance of being enabled if either parent has it disabled
-
         return child

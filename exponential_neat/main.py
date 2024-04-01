@@ -22,7 +22,7 @@ def main():
     df = pd.read_csv(datafile, header=None)
     data = df.to_numpy().astype(np.float32)
     X = data[:, :-1]
-    y = data[:, -1]
+    y = data[:, -1].reshape(-1, 1)
 
     # Initialize population
     num_features = X.shape[1]
@@ -33,18 +33,22 @@ def main():
 
     # For each iteration
     # with cProfile.Profile() as pr:
+    fitnesses = []
+    nets = []
     for i in tqdm(range(config["generations"])):
-        fitnesses = []
 
         # Evaluate the population
         for net in population.new_genomes:
             preds = population.genome.predict(net, X)
             fitnesses.append(evaluator(y, preds))
+            nets.append(net)
             net.graph["fitness"] = fitnesses[-1]
 
-            if abs(fitnesses[-1]) < 1e-6:
+            if abs(fitnesses[-1]) < 1e-5:
                 print("Solution found")
                 print(preds)
+                print(y)
+                print(preds - y)
                 print(net.edges(data=True))
                 print(f"Gen: {i}, Fitness: {fitnesses[-1]}")
                 draw_net("xor", net, fitnesses[-1])
@@ -56,7 +60,12 @@ def main():
         # Get Next Population
         population.getNextPopulation()
     
-    print("No solution found")
+    print("No accurate solution found")
+    best_fitness = np.min(fitnesses)
+    best_net = nets[np.argmin(fitnesses)]
+    print(f"Best Fitness: {best_fitness}")
+    draw_net("xor", best_net, best_fitness)
+
         # pr.print_stats(SortKey.CUMULATIVE)
 
 # From https://networkx.org/documentation/stable/auto_examples/graph/plot_dag_layout.html
@@ -73,14 +82,22 @@ def draw_net(problem: str, net: nx.DiGraph, fitness: float):
     fig, ax = plt.subplots()
     nx.draw_networkx(net, pos=pos, ax=ax)
 
-    for attr in ["weight", "disabled"]:
-        edge_labels = nx.get_edge_attributes(net, attr)
+    # Disabled nodes should have their edge opacity reduced
+    for edge in net.edges(data=True):
+        if edge[2].get("disabled", False):
+            nx.draw_networkx_edges(
+                net,
+                pos,
+                edgelist=[edge],
+                edge_color="black",
+                alpha=0.2,
+                ax=ax,
+            )
 
-        if attr == "weight":
-            for label in edge_labels:
-                edge_labels[label] = f"{edge_labels[label]:.2f}"
-
-        nx.draw_networkx_edge_labels(net, pos, edge_labels)
+    edge_labels = nx.get_edge_attributes(net, "weight")
+    for label in edge_labels:
+        edge_labels[label] = f"{edge_labels[label]:.2f}"
+    nx.draw_networkx_edge_labels(net, pos, edge_labels)
 
     ax.set_title(f"Problem: {problem}, Fitness: {fitness}")
     fig.tight_layout()

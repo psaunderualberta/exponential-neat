@@ -8,8 +8,8 @@ from util.constants import (
     P_WEIGHT,
     WEIGHT_MAX,
     WEIGHT_MIN,
-    WEIGHT_MU,
-    WEIGHT_SIGMA,
+    WEIGHT_LOWER,
+    WEIGHT_UPPER,
     POPULATION_SIZE,
 )
 from genetic_algorithm.genome import Genome
@@ -33,7 +33,7 @@ class Population:
 
     def removeStagnatedSpecies(self) -> None:
         non_stagnated = []
-        for species in self.species:
+        for i, species in enumerate(self.species):
             if not species.isStagnated():
                 non_stagnated.append(species)
 
@@ -62,23 +62,28 @@ class Population:
         return self.species
 
     def normalizeFitnesses(self) -> List[float]:
-        fitnesses = []
-        for species in self.species:
-            fitnesses.append(
-                [g.graph["fitness"] / len(species) for g in species.genomes]
+        fitnesses = [[g.graph["fitness"] for g in s.genomes] for s in self.species]
+        min_fitness = np.min([min(fs) for fs in fitnesses])
+        max_fitness = np.max([max(fs) for fs in fitnesses])
+
+        fitness_range = max(1.0, max_fitness - min_fitness)
+
+        norm_fitnesses = []
+        for fs in fitnesses:
+            norm_fitnesses.append(
+                [(max_fitness - f) / (len(fs) * fitness_range) for f in fs]
             )
 
         return fitnesses
 
     def computeSpawnAmounts(self, norm_fitnesses: List[List[float]]) -> List[int]:
         ids = np.arange(len(norm_fitnesses))
-        summed_norm_fitnesses = np.array([np.sum(fs) for fs in norm_fitnesses])
+        mean_norm_fitnesses = np.array([np.mean(fs) for fs in norm_fitnesses])
 
-        # TODO: This is not correct, as lower fitnesses have higher spawn amounts. The opposite should be true
         spawns = np.random.choice(
             ids,
             size=self.config[POPULATION_SIZE],
-            p=summed_norm_fitnesses / summed_norm_fitnesses.sum(),
+            p=mean_norm_fitnesses / mean_norm_fitnesses.sum(),
         )
         c = Counter(spawns)
         return [c[i] for i in ids]
@@ -97,14 +102,18 @@ class Population:
         spawn_amounts = self.computeSpawnAmounts(norms)
         assert len(spawn_amounts) == len(self.species)
 
+        # Update the representative genomes
+
         for species, sa in zip(self.species, spawn_amounts):
+            species.updateRepresentativeGenome()
             species.pruneWorstGenomes()
 
             # Copy over champion
             if sa > 0:
-                self.new_genomes.append(species.getRepresentativeGenome())
+                self.new_genomes.append(species.getChampion())
+                sa -= 1
 
-            for _ in range(sa - 1):
+            for _ in range(sa):
                 g = species.getRandomGenome()
 
                 # Crossover w/ some probability
@@ -117,8 +126,8 @@ class Population:
                 for edge in edges:
                     if unif() <= self.config[P_WEIGHT]:
                         # Perturb the weight by the specified noise
-                        edge[2]["weight"] += np.random.normal(
-                            self.config[WEIGHT_MU], self.config[WEIGHT_SIGMA]
+                        edge[2]["weight"] += unif(
+                            self.config[WEIGHT_LOWER], self.config[WEIGHT_UPPER]
                         )
 
                         # Clip the weight to ensure its not too big or too small
@@ -137,13 +146,6 @@ class Population:
 
                 # Append the genome to the list of new genomes
                 self.new_genomes.append(g)
-
-            # Update the representative genomes, as the old may have been removed
-            species.updateRepresentativeGenome()
-
-            n = species.getRepresentativeGenome()
-            # print(n)
-            # print(', '.join([f"{u} -> {v}" for u, v in n.edges()]))
 
         return self.new_genomes
 

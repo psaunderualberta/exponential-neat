@@ -36,7 +36,7 @@ class Species:
         return len(self.genomes)
 
     def isStagnated(self) -> bool:
-        return self.stalled_gens >= 20  # TODO: Make this a config parameter
+        return self.stalled_gens >= 15  # TODO: Make this a config parameter
 
     def addGenome(self, genome: nx.DiGraph) -> nx.DiGraph:
         self.genomes.append(genome)
