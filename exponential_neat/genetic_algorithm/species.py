@@ -26,7 +26,10 @@ class Species:
 
     def pruneWorstGenomes(self) -> None:
         sorted_genomes = sorted(self.genomes, key=lambda x: x.graph["fitness"])
-        num_to_keep = max(self.config["min-species-size"], int(len(self.genomes) * self.config["survival-threshold"]))
+        num_to_keep = max(
+            self.config["min-species-size"],
+            int(len(self.genomes) * self.config["survival-threshold"]),
+        )
         self.genomes = sorted_genomes[:num_to_keep]
 
     def __len__(self) -> int:
@@ -38,7 +41,7 @@ class Species:
     def addGenome(self, genome: nx.DiGraph) -> nx.DiGraph:
         self.genomes.append(genome)
         return genome
-    
+
     def logGeneration(self) -> None:
         best_new_fitness = max([g.graph["fitness"] for g in self.genomes])
         if self.best_fitness < best_new_fitness:

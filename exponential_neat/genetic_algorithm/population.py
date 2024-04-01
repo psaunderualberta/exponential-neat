@@ -64,8 +64,10 @@ class Population:
     def normalizeFitnesses(self) -> List[float]:
         fitnesses = []
         for species in self.species:
-            fitnesses.append([g.graph["fitness"] / len(species) for g in species.genomes])
-        
+            fitnesses.append(
+                [g.graph["fitness"] / len(species) for g in species.genomes]
+            )
+
         return fitnesses
 
     def computeSpawnAmounts(self, norm_fitnesses: List[List[float]]) -> List[int]:
@@ -73,7 +75,11 @@ class Population:
         summed_norm_fitnesses = np.array([np.sum(fs) for fs in norm_fitnesses])
 
         # TODO: This is not correct, as lower fitnesses have higher spawn amounts. The opposite should be true
-        spawns = np.random.choice(ids, size=self.config[POPULATION_SIZE], p=summed_norm_fitnesses / summed_norm_fitnesses.sum())
+        spawns = np.random.choice(
+            ids,
+            size=self.config[POPULATION_SIZE],
+            p=summed_norm_fitnesses / summed_norm_fitnesses.sum(),
+        )
         c = Counter(spawns)
         return [c[i] for i in ids]
 

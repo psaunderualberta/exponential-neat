@@ -26,25 +26,30 @@ class Genome:
         w_edges = [
             (i, out_node_id, {"weight": weight_gen(), "gin": i})
             for i in range(self.num_features)
-        ] + [(self.num_features, out_node_id, {"weight": weight_gen(), "gin": self.num_features})]
+        ] + [
+            (
+                self.num_features,
+                out_node_id,
+                {"weight": weight_gen(), "gin": self.num_features},
+            )
+        ]
         net.add_edges_from(w_edges)
 
         return self.annotateNodes(net)
-    
+
     def annotateNodes(self, net: nx.DiGraph) -> nx.DiGraph:
         # Add the nodes if they are not already present
         for i in range(self.num_features + 2):
             net.add_node(i)
 
-        nx.set_node_attributes(net, {self.num_features + 1: True}, name=OUTPUT_NODE_NAME)
+        nx.set_node_attributes(
+            net, {self.num_features + 1: True}, name=OUTPUT_NODE_NAME
+        )
         nx.set_node_attributes(
             net, {i: i for i in range(self.num_features)}, name="feature"
         )
-        nx.set_node_attributes(
-            net, {self.num_features: True}, name="bias"
-        )
+        nx.set_node_attributes(net, {self.num_features: True}, name="bias")
         return net
-
 
     def clone(self, net: nx.DiGraph) -> nx.DiGraph:
         return deepcopy(net)
@@ -70,7 +75,14 @@ class Genome:
                     new_node,
                     {"weight": 1, "gin": next(self.global_innovation_number)},
                 ),
-                (new_node, snk_node, {"weight": data["weight"], "gin": next(self.global_innovation_number)}),
+                (
+                    new_node,
+                    snk_node,
+                    {
+                        "weight": data["weight"],
+                        "gin": next(self.global_innovation_number),
+                    },
+                ),
             ]
         )
 
@@ -94,7 +106,12 @@ class Genome:
             n1 = choice(nodes)
             n2 = choice(nodes)
 
-            if n1 == n2 or (n1, n2) in edges or n2 in input_node_ids or n1 == output_node_id:
+            if (
+                n1 == n2
+                or (n1, n2) in edges
+                or n2 in input_node_ids
+                or n1 == output_node_id
+            ):
                 continue
 
             nc = deepcopy(net)
@@ -170,7 +187,7 @@ class Genome:
             print(fitter.edges(data=True))
             print(weaker.edges(data=True))
         assert nx.is_directed_acyclic_graph(child)
-    
+
         # Each disabled edge has a 75% chance of being enabled if either parent has it disabled
 
         return child
