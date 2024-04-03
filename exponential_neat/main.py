@@ -32,8 +32,6 @@ def run(eps):
         output = winner_net.activate(xi)
         print("  input {!r}, expected output {!r}, got {!r}".format(xi, xo, output))
 
-
-    print('\nDifferential Privacy Results:')
     dp_results = reporter.evaluate_dp(eps, XOR_SENSIIVITY, 10_000)
     return np.histogram(dp_results[-1, :], range=(0, 4), bins=50, density=True)
 
@@ -42,17 +40,29 @@ def main():
     hists = []
     bin_edges = []
     epsilons_records = []
+    num_iters_per_eps = 10
     for eps in epsilons:
-        h, e = run(eps)
+        hs = []
+        es = []
+        for _ in range(num_iters_per_eps):
+            h, e = run(eps)
+            hs.append(h)
+            es.append(e)
+        assert all(np.all(es[0] == e) for e in es) == 1, "Bin edges are not the same across iterations"
+
+        # Average the histograms
+        h = np.mean(hs, axis=0)
+        e = es[0]
+
+        # Append to the lists
         hists.append(h)
         bin_edges.append(e[:-1])
         epsilons_records.append([eps for _ in range(h.shape[0])])
     
-
+    # Convert to numpy arrays
     hists = np.array(hists)
     bin_edges = np.array(bin_edges)
     epsilons_records = np.array(epsilons_records)
-
 
     # Plot the surface
     _, ax = plt.subplots(subplot_kw={"projection": "3d"})
@@ -60,12 +70,12 @@ def main():
 
     ax.set(
         xlabel="Epsilons",
-        ylabel="Sampled Network Performance",
+        ylabel="Network Performance Density",
         zlabel="Density",
         title="Density of repeated private sampling at different epsilon settings"
     )
 
-    outfile = os.path.join(".", "outputs", "xor-density.png")
+    outfile = os.path.join(".", "outputs", "xor-density.pdf")
     plt.tight_layout()
     plt.savefig(outfile)
 
