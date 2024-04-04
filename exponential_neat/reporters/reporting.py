@@ -34,3 +34,10 @@ class DifferentialPrivacyDemoReporter(StdOutReporter):
 
     def get_champions(self):
         return self.champions
+
+    def get_fitnesses(self):
+        fitnesses = []
+        for f in map(np.array, self.fitnesses):
+            fitnesses.extend(f[:, 1])
+
+        return np.array(fitnesses)
