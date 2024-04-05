@@ -46,8 +46,6 @@ def run(problempath):
 def evaluate_dp(values, epsilon, sensitivity, num_samples = 100):
     fitnesses = np.array(values)
     weights = np.exp((epsilon * fitnesses) / (2 * sensitivity))
-    print(weights)
-    print(np.sum(weights))
     return np.random.choice(fitnesses, size=(1, num_samples), p=weights / np.sum(weights))
 
 def hist(values):
@@ -68,7 +66,7 @@ def main():
     os.makedirs(outputpath, exist_ok=True)
 
     epsilons = np.arange(1, 25)
-    num_synthesis_runs = 1
+    num_synthesis_runs = 100 
 
     with mp.Pool(os.cpu_count()) as p:
         results = p.map(run, [problempath] * num_synthesis_runs) 
