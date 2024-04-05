@@ -24,24 +24,28 @@ class Evaluator:
             self.min_output = 0
             self.max_output = self.outputs.shape[1] 
         elif task == REGRESSION:
-            ValueError("Regression is not yet supported")
+            raise ValueError("Regression is not yet supported")
         else:
-            ValueError(f"Task of type '{task}' is not yet supported." \
-                        + f"Please choose from '{[CLASSIFICATION, REGRESSION]}'")
+            raise ValueError(f"Task of type '{task}' is not yet supported." \
+                            + f"Please choose from '{[CLASSIFICATION, REGRESSION]}'")
+        self.normalizer = self.inputs.shape[0] * self.outputs.shape[1]
     
     def eval_genomes(self, genomes, config):
-        for genome_id, genome in genomes:
-            genome.fitness = self.inputs.shape[0] * self.outputs.shape[1]
+        for _, genome in genomes:
+            genome.fitness = 0
             net = neat.nn.FeedForwardNetwork.create(genome, config)
-            t = []
             for xi, xo in zip(self.inputs, self.outputs):
                 output = net.activate(xi)
                 output = [o / max(sum(output), 1e-10) for o in output]
 
-                f = np.sum(np.abs(output - xo))
+                f = np.sum((output - xo) ** 2)
+
+                # This shouldn't do anything, but just to be safe
                 f = min(max(f, self.min_output), self.max_output)
-                t.append(f)
+                
                 genome.fitness -= f
+
+            genome.fitness = (genome.fitness + self.normalizer) / self.normalizer
                 
     def predict_genome(self, genome, config, inputs = None):
         if inputs is None:
@@ -60,4 +64,4 @@ class Evaluator:
         return outputs
 
     def get_sensitivity(self):
-        return (self.max_output - self.min_output) ** 2 
+        return (self.max_output - self.min_output) ** 2 / self.normalizer 

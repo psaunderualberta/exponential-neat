@@ -51,7 +51,7 @@ def evaluate_dp(values, epsilon, sensitivity, num_samples = 100):
     return np.random.choice(fitnesses, size=(1, num_samples), p=weights / np.sum(weights))
 
 def hist(values):
-    return np.histogram(values, range=(0, 4), bins=100, density=True)
+    return np.histogram(values, range=(0, 1), bins=100, density=True)
 
 def main():
     dirname = os.path.dirname(__file__)
@@ -67,7 +67,7 @@ def main():
     outputpath = os.path.join(problempath, "outputs")
     os.makedirs(outputpath, exist_ok=True)
 
-    epsilons = np.arange(1, 50)
+    epsilons = np.arange(1, 25)
     num_synthesis_runs = 1
 
     with mp.Pool(os.cpu_count()) as p:
