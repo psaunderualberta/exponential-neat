@@ -5,10 +5,11 @@ from problems.xor.xor import eval_genomes, xor_inputs, xor_outputs, XOR_SENSIIVI
 import matplotlib.pyplot as plt
 import numpy as np
 import multiprocessing as mp
+import argparse
 
 # Load configuration.
-def run():
-    configfile = os.path.join('.', 'problems', 'xor', 'config-feedforward')
+def run(problempath):
+    configfile = os.path.join(problempath, 'config-feedforward')
     config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
                          neat.DefaultSpeciesSet, neat.DefaultStagnation,
                          configfile)
@@ -44,13 +45,25 @@ def hist(values):
     return np.histogram(values, range=(0, 4), bins=100, density=True)
 
 def main():
-    epsilons = np.arange(1, 50)
-    num_synthesis_runs = 100 
+    dirname = os.path.dirname(__file__)
+    problems = os.listdir(os.path.join(dirname, "problems"))
+    problems = list(filter(lambda a: a not in [".", ".."], problems))
+    print(problems)
 
-    fitnesses = []
+    # Setup & Parse arguments
+    parser = argparse.ArgumentParser(description="Evaluate DP performance on NEAT results.")
+    parser.add_argument("--problem", required=True, choices=problems, help="The specified problem to solve.")
+    args = parser.parse_args()
+
+    problempath = os.path.join(dirname, "problems", args.problem)
+    outputpath = os.path.join(problempath, "outputs")
+    os.makedirs(outputpath, exist_ok=True)
+
+    epsilons = np.arange(1, 50)
+    num_synthesis_runs = 5 
+
     with mp.Pool() as p:
-        tasks = [p.apply_async(run) for _ in range(num_synthesis_runs)]
-        fitnesses = [f.get() for f in tasks]
+        fitnesses = p.map(run, [problempath] * num_synthesis_runs) 
 
     print(sum(map(lambda arr: arr.size, fitnesses)))
 
@@ -92,7 +105,7 @@ def main():
         title="Density of repeated private sampling at different epsilon settings"
     )
 
-    outfile = os.path.join(".", "outputs", "xor-density.pdf")
+    outfile = os.path.join(outputpath, "xor-density.pdf")
     plt.tight_layout()
     plt.savefig(outfile)
 
@@ -117,7 +130,7 @@ def main():
     plt.ylabel("Density")
 
     plt.tight_layout()
-    outfile = os.path.join(".", "outputs", "xor-true-density.pdf")
+    outfile = os.path.join(outputpath, "xor-true-density.pdf")
     plt.savefig(outfile)
 
 if __name__ == "__main__":
