@@ -5,8 +5,6 @@
 import neat
 
 # 2-input XOR inputs and expected outputs.
-xor_inputs = [(0.0, 0.0), (0.0, 1.0), (1.0, 0.0), (1.0, 1.0)]
-xor_outputs = [(0.0,), (1.0,), (1.0,), (0.0,)]
 
 __MAX_OUTPUT = 1.0
 __MIN_OUTPUT = 0.0

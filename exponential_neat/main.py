@@ -1,13 +1,14 @@
 import neat
 import os
 from reporters.reporting import DifferentialPrivacyDemoReporter
-from problems.xor.xor import eval_genomes, xor_inputs, xor_outputs, XOR_SENSIIVITY
 import matplotlib.pyplot as plt
 import numpy as np
 import multiprocessing as mp
 import argparse
+from problems.evaluator import Evaluator, CLASSIFICATION 
 
-# Load configuration.
+MAX_GENERATIONS = 500
+
 def run(problempath):
     configfile = os.path.join(problempath, 'config-feedforward')
     config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
@@ -22,23 +23,31 @@ def run(problempath):
     p.add_reporter(reporter)
 
     # Run until a solution is found.
-    winner = p.run(eval_genomes)
+    datafile = os.path.join(problempath, 'data.csv')
+    data = np.genfromtxt(datafile, delimiter=',', dtype=str)
+    inputs = data[1:, :-1].astype(np.float32)
+    outputs = data[1:, -1].reshape(-1, 1)
+    evaluator = Evaluator(inputs, outputs, CLASSIFICATION)    
+    winner = p.run(evaluator.eval_genomes, n=MAX_GENERATIONS)
 
     # Display the winning genome.
     print('\nBest genome:\n{!s}'.format(winner))
 
     # Show output of the most fit genome against training data.
     print('\nOutput:')
-    winner_net = neat.nn.FeedForwardNetwork.create(winner, config)
-    for xi, xo in zip(xor_inputs, xor_outputs):
-        output = winner_net.activate(xi)
-        print("  input {!r}, expected output {!r}, got {!r}".format(xi, xo, output))
+    for inp, expected, out in zip(inputs, outputs, evaluator.predict_genome(winner, config)):
+        print("  input {!r}, expected output {!r}, got {!r}".format(inp, expected, out))
 
-    return reporter.get_fitnesses()
+    return {
+        "fitnesses": reporter.get_fitnesses(),
+        "sensitivity": evaluator.get_sensitivity()
+    }
 
 def evaluate_dp(values, epsilon, sensitivity, num_samples = 100):
     fitnesses = np.array(values)
     weights = np.exp((epsilon * fitnesses) / (2 * sensitivity))
+    print(weights)
+    print(np.sum(weights))
     return np.random.choice(fitnesses, size=(1, num_samples), p=weights / np.sum(weights))
 
 def hist(values):
@@ -59,13 +68,19 @@ def main():
     os.makedirs(outputpath, exist_ok=True)
 
     epsilons = np.arange(1, 50)
-    num_synthesis_runs = 100 
+    num_synthesis_runs = 1
 
     with mp.Pool(os.cpu_count()) as p:
-        fitnesses = p.map(run, [problempath] * num_synthesis_runs) 
+        results = p.map(run, [problempath] * num_synthesis_runs) 
 
+    fitnesses = list(map(lambda t: t["fitnesses"], results)) 
     print(sum(map(lambda arr: arr.size, fitnesses)))
 
+    # Get sensitivity of problem
+    sensitivities = list(map(lambda t: t["sensitivity"], results)) 
+    assert len(set(sensitivities)) == 1
+    sensitivity = sensitivities[0]
+    
     hists = []
     bin_edges = []
     epsilons_records = []
@@ -73,7 +88,7 @@ def main():
         hs = []
         es = []
         for f in fitnesses:
-            private_f = evaluate_dp(f, eps, XOR_SENSIIVITY)
+            private_f = evaluate_dp(f, eps, sensitivity)
             h, e = hist(private_f)
             hs.append(h)
             es.append(e)

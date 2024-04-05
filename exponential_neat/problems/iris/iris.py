@@ -28,7 +28,7 @@ def eval_genomes(genomes, config):
         for xi, xo in zip(__inputs, __outputs):
             output = net.activate(xi)
             
-            f = np.sum((output[0] - xo[0]) ** 2)
+            f = np.sum((output[0] - xo[0]))
             f = min(max(f, __MIN_OUTPUT), __MAX_OUTPUT)
             genome.fitness -= f
 
