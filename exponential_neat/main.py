@@ -48,7 +48,6 @@ def main():
     dirname = os.path.dirname(__file__)
     problems = os.listdir(os.path.join(dirname, "problems"))
     problems = list(filter(lambda a: a not in [".", ".."], problems))
-    print(problems)
 
     # Setup & Parse arguments
     parser = argparse.ArgumentParser(description="Evaluate DP performance on NEAT results.")
@@ -60,9 +59,9 @@ def main():
     os.makedirs(outputpath, exist_ok=True)
 
     epsilons = np.arange(1, 50)
-    num_synthesis_runs = 5 
+    num_synthesis_runs = 100 
 
-    with mp.Pool() as p:
+    with mp.Pool(os.cpu_count()) as p:
         fitnesses = p.map(run, [problempath] * num_synthesis_runs) 
 
     print(sum(map(lambda arr: arr.size, fitnesses)))
