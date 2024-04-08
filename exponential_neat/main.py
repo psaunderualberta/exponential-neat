@@ -61,8 +61,9 @@ def main():
     parser = argparse.ArgumentParser(description="Evaluate DP performance on NEAT results.")
     parser.add_argument("--problem", required=True, choices=problems, help="The specified problem to solve.")
     args = parser.parse_args()
+    problem = args.problem
 
-    problempath = os.path.join(dirname, "problems", args.problem)
+    problempath = os.path.join(dirname, "problems", problem)
     outputpath = os.path.join(problempath, "outputs")
     os.makedirs(outputpath, exist_ok=True)
 
@@ -84,7 +85,7 @@ def main():
     bin_edges = []
     epsilons_records = []
     frames = []
-    s = "Epsilon: {:.2f}"
+    s = r"$\varepsilon={:.2f}$"
     for eps in epsilons:
         hs = []
         es = []
@@ -117,7 +118,7 @@ def main():
         plt.close()
 
     # Plot the gif
-    outfile = os.path.join(outputpath, "xor-density.gif")
+    outfile = os.path.join(outputpath, f"{problem}-density.gif")
     imageio.mimsave(outfile, frames, loop = 0, fps=5)
     
     # Convert to numpy arrays
@@ -136,7 +137,7 @@ def main():
         title="Density of repeated private sampling at different epsilon settings"
     )
 
-    outfile = os.path.join(outputpath, "xor-density.pdf")
+    outfile = os.path.join(outputpath, f"{problem}-density.pdf")
     plt.savefig(outfile)
 
 
@@ -160,7 +161,7 @@ def main():
     plt.ylabel("Density")
 
     plt.tight_layout()
-    outfile = os.path.join(outputpath, "xor-true-density.pdf")
+    outfile = os.path.join(outputpath, f"{problem}-true-density.pdf")
     plt.savefig(outfile)
 
 
