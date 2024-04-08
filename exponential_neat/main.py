@@ -6,6 +6,7 @@ import numpy as np
 import multiprocessing as mp
 import argparse
 from problems.evaluator import Evaluator, CLASSIFICATION 
+import imageio
 
 MAX_GENERATIONS = 500
 
@@ -65,7 +66,7 @@ def main():
     outputpath = os.path.join(problempath, "outputs")
     os.makedirs(outputpath, exist_ok=True)
 
-    epsilons = np.arange(1, 25)
+    epsilons = np.arange(1, 25, 0.5)
     num_synthesis_runs = 100 
 
     with mp.Pool(os.cpu_count()) as p:
@@ -82,6 +83,8 @@ def main():
     hists = []
     bin_edges = []
     epsilons_records = []
+    frames = []
+    s = "Epsilon: {:.2f}"
     for eps in epsilons:
         hs = []
         es = []
@@ -100,6 +103,22 @@ def main():
         hists.append(h)
         bin_edges.append(e[:-1])
         epsilons_records.append([eps for _ in range(h.shape[0])])
+
+        # Create the frame for the gif
+        fig, ax = plt.subplots()
+        ax.set(
+            title=s.format(eps),
+            xlabel="Network Fitness",
+            ylabel="Density"
+        )
+        plt.stairs(h, e, color="blue")
+        fig.canvas.draw()
+        frames.append(np.array(fig.canvas.renderer._renderer))
+        plt.close()
+
+    # Plot the gif
+    outfile = os.path.join(outputpath, "xor-density.gif")
+    imageio.mimsave(outfile, frames, loop = 0, fps=5)
     
     # Convert to numpy arrays
     hists = np.array(hists)
@@ -118,7 +137,6 @@ def main():
     )
 
     outfile = os.path.join(outputpath, "xor-density.pdf")
-    plt.tight_layout()
     plt.savefig(outfile)
 
 
@@ -144,6 +162,8 @@ def main():
     plt.tight_layout()
     outfile = os.path.join(outputpath, "xor-true-density.pdf")
     plt.savefig(outfile)
+
+
 
 if __name__ == "__main__":
     main()
