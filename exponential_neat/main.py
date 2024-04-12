@@ -90,8 +90,10 @@ def main():
         hs = []
         es = []
         for f in fitnesses:
-            private_f = evaluate_dp(f, eps, sensitivity)
-            h, e = hist(private_f)
+            # private_f = evaluate_dp(f, eps, sensitivity)
+            
+            h, e = hist(f)
+            h += np.random.laplace(0, scale=2 / eps, size=h.shape)
             hs.append(h)
             es.append(e)
         assert all(np.all(es[0] == e) for e in es) == 1, "Bin edges are not the same across iterations"
@@ -134,7 +136,7 @@ def main():
         xlabel=r"$\varepsilon$",
         ylabel="Network Performance Density",
         zlabel="Density",
-        title="Density of repeated private sampling at different epsilon settings"
+        title="Differentially Private Histogram"
     )
 
     outfile = os.path.join(outputpath, f"{problem}-density.pdf")
@@ -156,7 +158,7 @@ def main():
 
     fig = plt.figure()
     plt.hist(e[:-1], e, weights=h)
-    plt.title("True Fitness Density")
+    plt.title("True Network Fitnesses")
     plt.xlabel("Network Fitness")
     plt.ylabel("Density")
 
